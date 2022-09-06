@@ -36,3 +36,6 @@
 
 /target
 cpp/build/
+
+**/*.png
+**/*.bmp
