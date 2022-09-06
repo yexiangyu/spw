@@ -1,0 +1,9 @@
+{
+	"cmake.sourceDirectory": "${workspaceFolder}/cpp",
+	"files.associations": {
+		"*.es": "es",
+		"xiosbase": "cpp",
+		"spw.h": "c",
+		"ostream": "cpp"
+	}
+}
