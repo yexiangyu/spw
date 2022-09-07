@@ -5,24 +5,23 @@
 #include "stb_image_write.h"
 #include <stdio.h>
 
-void swap_rb(Frame frame)
+void swap_rb(Frame *frame)
 {
-	for (int i = 0; i < frame.w * frame.h; i++)
+	for (int i = 0; i < frame->w * frame->h; i++)
 	{
-		char tmp = frame.data[i * frame.c];
-		frame.data[i * frame.c] = frame.data[i * frame.c + 2];
-		frame.data[i * frame.c + 2] = tmp;
+		char tmp = frame->data[i * frame->c];
+		frame->data[i * frame->c] = frame->data[i * frame->c + 2];
+		frame->data[i * frame->c + 2] = tmp;
 	}
 }
 
-void callback(Frame frame)
+void callback(Frame *frame)
 {
 	char file_name[1024] = {0};
 	swap_rb(frame);
-	sprintf(file_name, "%d.bmp", frame.frame_id);
-	int rc = stbi_write_bmp(file_name, frame.w, frame.h, frame.c, (const void *)frame.data);
-	printf("callback id=%d, frame data=%lld, output=%s, rc=%d\n", frame.frame_id, (unsigned long long)frame.data, file_name, rc);
-	free(frame.data);
+	sprintf(file_name, "%d.bmp", frame->frame_id);
+	int rc = stbi_write_bmp(file_name, frame->w, frame->h, frame->c, (const void *)frame->data);
+	printf("callback id=%d, frame data=%lld, output=%s, rc=%d\n", frame->frame_id, (unsigned long long)frame->data, file_name, rc);
 	return;
 }
 
@@ -31,7 +30,7 @@ int main(int argc, char **argv)
 	Location loc = location_new("Xtium-CL_MX4_1", 2);
 	printf("new location %lld\n", (unsigned long long)loc);
 	// char *cfg_file = "C://Program Files//Teledyne DALSA//Sapera//CamFiles//User//b_cct_Default_Default.ccf";
-	char *cfg_file = "C://Program Files//Teledyne DALSA//Sapera//CamFiles//User//b_FullRGB_Default_Default.ccf";
+	const char *cfg_file = "C://Program Files//Teledyne DALSA//Sapera//CamFiles//User//b_FullRGB_Default_Default.ccf";
 	printf("cfg_file=%s\n", cfg_file);
 	Acq acq = acq_new(loc, cfg_file);
 	// Acq acq = acq_new(loc, "C://Program Files//Teledyne DALSA//Sapera//CamFiles//User//b_FullRGB_Default_Default.ccf");

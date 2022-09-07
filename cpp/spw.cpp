@@ -11,6 +11,11 @@ using namespace std::chrono_literals;
 #ifdef _WIN64
 #include "SapClassBasic.h"
 
+unsigned long long epoch_now()
+{
+	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+}
+
 template <class T>
 bool free_as(void *ptr)
 {
@@ -101,21 +106,25 @@ BOOL Processing_::Run()
 			c = mem_size / (w * h);
 		}
 
-		std::cout << "current buff index=" << buf_idx << ",state=" << state << ",addr=" << addr << ",mem_size=" << mem_size << ",size=" << w << "x" << h << "x" << c << std::endl;
+		// int frame_id = ctx->frame_grab_count;
+
+		// std::cout << "current buff index=" << buf_idx << ",state=" << state << ",addr=" << addr << ",mem_size=" << mem_size << ",size=" << w << "x" << h << "x" << c << std::endl;
 
 		if (f_callback)
 		{
-			char *data = (char *)malloc(sizeof(char) * mem_size);
-			memset((void *)data, 255, mem_size);
-			std::copy((char *)addr, (char *)(addr) + mem_size, data);
-			Frame frame = {w, h, c, ctx->frame_grab_count, data};
-			std::cout << "<<<<<";
-			for (int i = 0; i < 20; i++)
-			{
-				std::cout << (int)(frame.data[i]) << "|";
-			}
-			std::cout << std::endl;
-			f_callback(frame);
+			unsigned char *data = (unsigned char *)malloc(sizeof(unsigned char) * mem_size);
+			// memset((void *)data, 255, mem_size);
+			std::copy((unsigned char *)addr, (unsigned char *)(addr) + mem_size, data);
+			Frame frame = {static_cast<uint64_t>(w), static_cast<uint64_t>(h), static_cast<uint64_t>(c), static_cast<uint64_t>(ctx->frame_grab_count), epoch_now(), data};
+			// std::cout << "<<<<<";
+			// for (int i = 0; i < 20; i++)
+			// {
+			// 	std::cout << (int)(frame.data[i]) << "|";
+			// }
+			// std::cout << std::endl;
+			// printf("%lx\n", f_callback);
+			f_callback(&frame);
+			free(frame.data);
 		}
 	}
 	else
@@ -144,8 +153,9 @@ void processing_callback(SapProCallbackInfo *info)
 
 extern "C"
 {
-	DLL Location location_new(char *server_name, int device_id)
+	DLL Location location_new(const char *server_name, int device_id)
 	{
+		// printf("%s\n", server_name);
 		return new SapLocation(server_name, device_id);
 	}
 
@@ -154,14 +164,20 @@ extern "C"
 		return free_as<SapLocation>(location);
 	}
 
-	DLL Acq acq_new(Location location, char *config_file_name)
+	DLL Acq acq_new(Location location, const char *config_file_name)
 	{
+		// printf("%s\n", config_file_name);
 		return new SapAcquisition(*(SapLocation *)location, config_file_name);
 	}
 
 	DLL bool acq_create(Acq acq)
 	{
 		return create_as<SapAcquisition>(acq);
+	}
+
+	DLL bool acq_free(Acq acq)
+	{
+		return free_as<SapAcquisition>(acq);
 	}
 
 	DLL Buffer buffer_new(int count, Acq acq)
@@ -199,6 +215,11 @@ extern "C"
 		return ((Context_ *)ctx)->frame_grab_count;
 	}
 
+	DLL int context_proc_frame_count(Context ctx)
+	{
+		return ((Context_ *)ctx)->frame_proc_count;
+	}
+
 	DLL void context_counter_reset(Context ctx)
 	{
 		((Context_ *)ctx)->frame_proc_count = 0;
@@ -206,7 +227,7 @@ extern "C"
 		return;
 	}
 
-	DLL bool procssing_free(Processing proc)
+	DLL bool processing_free(Processing proc)
 	{
 		return free_destroy_as<Processing_>(proc);
 	}
@@ -244,7 +265,7 @@ extern "C"
 		return ((SapAcqToBuf *)atb)->Freeze();
 	}
 
-	void sleep_for_1s()
+	DLL void sleep_for_1s()
 	{
 		std::this_thread::sleep_for(1s);
 	}

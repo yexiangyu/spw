@@ -2,6 +2,7 @@
 
 #ifdef _WIN64
 #define DLL __declspec(dllexport)
+#include <stdint.h>
 #ifdef __cplusplus
 extern "C"
 {
@@ -11,21 +12,22 @@ extern "C"
 
 	DLL typedef struct Frame
 	{
-		int w;
-		int h;
-		int c;
-		int frame_id;
-		char *data;
+		uint64_t w;
+		uint64_t h;
+		uint64_t c;
+		uint64_t timestamp;
+		uint64_t frame_id;
+		unsigned char *data;
 	} Frame;
 
-	DLL typedef void (*FrameCallback)(Frame);
+	DLL typedef void (*FrameCallback)(Frame *);
 
 	DLL typedef void *Location;
-	DLL Location location_new(char *server_name, int device_id);
+	DLL Location location_new(const char *server_name, int device_id);
 	DLL bool location_free(Location location);
 
 	DLL typedef void *Acq;
-	DLL Acq acq_new(Location location, char *config_file_name);
+	DLL Acq acq_new(Location location, const char *config_file_name);
 	DLL bool acq_free(Acq acq);
 	DLL bool acq_create(Acq acq);
 
@@ -43,7 +45,7 @@ extern "C"
 
 	DLL typedef void *Processing;
 	DLL Processing processing_new(Buffer buf, FrameCallback callback, Context ctx);
-	DLL bool procssing_free(Processing proc);
+	DLL bool processing_free(Processing proc);
 	DLL bool processing_create(Processing proc);
 
 	DLL void context_attach_processing(Context ctx, Processing proc);
