@@ -57,6 +57,8 @@ impl From<spw_sys::Frame> for Frame {
     }
 }
 
+pub type CFrame = spw_sys::Frame;
+
 impl From<Frame> for spw_sys::Frame {
     fn from(frm: Frame) -> Self {
         let Frame {
